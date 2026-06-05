@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinemática 1 — Movimiento Humano</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    
+    .vld-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    header {
+      background: #0066cc;
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    header h1 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    main {
+      padding: 40px;
+      min-height: 500px;
+    }
+    
+    .screen {
+      display: none;
+    }
+    
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    
+    button {
+      padding: 12px 30px;
+      font-size: 1em;
+      border: none;
+      border-radius: 4px;
+      background: #0066cc;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    button:hover {
+      background: #0052a3;
+    }
+    
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .progress {
+      text-align: center;
+      color: #999;
+      font-size: 0.9em;
+      margin-top: 20px;
+    }
+    
+    canvas {
+      border: 1px solid #ddd;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="vld-container">
+    <header>
+      <h1>Cinemática 1: Movimiento Humano</h1>
+      <p>Virtual Lecture Demonstration interactiva</p>
+    </header>
+    
+    <main id="main">
+      <!-- PANTALLA 1: Animación estática -->
+      <section class="screen active" id="screen-1">
+        <h2>Pantalla 1: Observa el movimiento</h2>
+        <p>Una persona se aleja de una pared (detector de movimiento en la pared).</p>
+        <canvas id="canvas-screen1" width="700" height="300"></canvas>
+        <div class="button-group">
+          <button onclick="nextScreen()">Siguiente →</button>
+        </div>
+      </section>
+      
+      <!-- PANTALLA 2: Predicción múltiple choice -->
+      <section class="screen" id="screen-2">
+        <h2>Pantalla 2: ¿Cuál es tu predicción?</h2>
+        <p>¿Cuál gráfica representa la <strong>distancia vs. tiempo</strong> para una persona alejándose a velocidad constante?</p>
+        
+        <div style="margin: 30px 0;">
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="prediction" value="horizontal">
+            <strong>A) Línea horizontal</strong>
+          </label>
+          
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="prediction" value="ascending">
+            <strong>B) Línea ascendente</strong>
+          </label>
+          
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="prediction" value="descending">
+            <strong>C) Línea descendente</strong>
+          </label>
+        </div>
+        
+        <div class="button-group">
+          <button onclick="prevScreen()">← Atrás</button>
+          <button onclick="nextScreen()" id="btn-screen2-next" disabled>Siguiente →</button>
+        </div>
+      </section>
+      
+      <!-- PANTALLA 3: Estadísticas -->
+      <section class="screen" id="screen-3">
+        <h2>Pantalla 3: Tendencias de otros estudiantes</h2>
+        <p>Otros estudiantes predicen así:</p>
+        <canvas id="canvas-screen3" width="700" height="300"></canvas>
+        <div class="button-group">
+          <button onclick="prevScreen()">← Atrás</button>
+          <button onclick="nextScreen()">Siguiente →</button>
+        </div>
+      </section>
+      
+      <!-- PANTALLA 4: Segunda predicción -->
+      <section class="screen" id="screen-4">
+        <h2>Pantalla 4: ¿Cambias tu predicción?</h2>
+        <p>Después de ver cómo piensan otros estudiantes, ¿cambias tu respuesta?</p>
+        
+        <div style="margin: 30px 0;">
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="prediction-2" value="keep">
+            <strong>Mantengo mi predicción inicial</strong>
+          </label>
+          
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="prediction-2" value="change">
+            <strong>Cambio mi respuesta a:</strong>
+            <select id="new-prediction" style="margin-left: 10px; padding: 5px;">
+              <option value="">-- Selecciona --</option>
+              <option value="horizontal">Línea horizontal</option>
+              <option value="ascending">Línea ascendente</option>
+              <option value="descending">Línea descendente</option>
+            </select>
+          </label>
+        </div>
+        
+        <div class="button-group">
+          <button onclick="prevScreen()">← Atrás</button>
+          <button onclick="nextScreen()" id="btn-screen4-next" disabled>Siguiente →</button>
+        </div>
+      </section>
+      
+      <!-- PANTALLA 5: Simulación interactiva -->
+      <section class="screen" id="screen-5">
+        <h2>Pantalla 5: Simulación interactiva</h2>
+        <p>Experimenta: mueve el deslizador y observa la gráfica en tiempo real.</p>
+        
+        <div style="margin: 20px 0;">
+          <label>
+            Velocidad: 
+            <input type="range" id="velocity-slider" min="0.5" max="3" step="0.5" value="1">
+            <span id="velocity-display">1.0</span> m/s
+          </label>
+          <button onclick="runSimulation()">▶ Ejecutar simulación</button>
+          <button onclick="resetSimulation()">↻ Reiniciar</button>
+        </div>
+        
+        <canvas id="canvas-screen5" width="700" height="400"></canvas>
+        
+        <div class="button-group">
+          <button onclick="prevScreen()">← Atrás</button>
+          <button onclick="nextScreen()">Siguiente →</button>
+        </div>
+      </section>
+      
+      <!-- PANTALLA 6: Diálogo socrático (STUB) -->
+      <section class="screen" id="screen-6">
+        <h2>Pantalla 6: Reflexión guiada</h2>
+        
+        <div style="background: #f0f0f0; padding: 20px; border-radius: 4px; margin: 20px 0;">
+          <p><strong>Tu predicción fue:</strong> <span id="recap-prediction">Cargando...</span></p>
+          <p><strong>Lo que observaste:</strong> Línea ascendente (distancia aumenta)</p>
+        </div>
+        
+        <div id="dialogue-container">
+          <p><strong>Claude:</strong> Viste que la línea sube. ¿Qué crees que representa eso?</p>
+          
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="response-6" value="a">
+            <strong>A) Que la persona se mueve más rápido</strong>
+          </label>
+          
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="response-6" value="b">
+            <strong>B) Que la distancia aumenta con el tiempo</strong>
+          </label>
+          
+          <label style="display: block; margin: 15px 0; cursor: pointer;">
+            <input type="radio" name="response-6" value="c">
+            <strong>C) Que pasa el tiempo</strong>
+          </label>
+        </div>
+        
+        <div class="button-group">
+          <button onclick="prevScreen()">← Atrás</button>
+          <button onclick="finishVLD()">✓ Completar</button>
+        </div>
+      </section>
+    </main>
+    
+    <div class="progress">
+      Pantalla <span id="current-screen">1</span> de 6
+    </div>
+  </div>
+  
+  <script>
+    // ============ ESTADO GLOBAL ============
+    let studentData = {
+      prediction1: null,
+      prediction2: null,
+      observationScreen5: null,
+      response6: null
+    };
+    
+    let currentScreen = 1;
+    
+    // ============ NAVEGACIÓN ============
+    function nextScreen() {
+      if (currentScreen < 6) {
+        currentScreen++;
+        updateScreen();
+      }
+    }
+    
+    function prevScreen() {
+      if (currentScreen > 1) {
+        currentScreen--;
+        updateScreen();
+      }
+    }
+    
+    function updateScreen() {
+      // Oculta todas las pantallas
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      
+      // Muestra la actual
+      document.getElementById(`screen-${currentScreen}`).classList.add('active');
+      
+      // Actualiza progreso
+      document.getElementById('current-screen').textContent = currentScreen;
+      
+      // Acciones específicas
+      if (currentScreen === 1) drawScreen1();
+      if (currentScreen === 3) drawScreen3();
+      if (currentScreen === 5) drawScreen5Initial();
+      if (currentScreen === 6) updateScreen6();
+    }
+    
+    // ============ PANTALLA 2: Captura predicción ============
+    document.addEventListener('change', (e) => {
+      if (e.target.name === 'prediction') {
+        studentData.prediction1 = e.target.value;
+        document.getElementById('btn-screen2-next').disabled = false;
+      }
+      if (e.target.name === 'prediction-2') {
+        if (e.target.value === 'keep') {
+          studentData.prediction2 = studentData.prediction1;
+          document.getElementById('btn-screen4-next').disabled = false;
+        } else if (e.target.value === 'change') {
+          // Espera a que elija del dropdown
+        }
+      }
+    });
+    
+    document.addEventListener('change', (e) => {
+      if (e.target.id === 'new-prediction' && e.target.value) {
+        studentData.prediction2 = e.target.value;
+        document.getElementById('btn-screen4-next').disabled = false;
+      }
+    });
+    
+    // ============ PANTALLA 1: Dibuja animación estática ============
+    function drawScreen1() {
+      const canvas = document.getElementById('canvas-screen1');
+      const ctx = canvas.getContext('2d');
+      
+      // Limpia canvas
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Dibuja ejes
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(50, canvas.height - 50);
+      ctx.lineTo(canvas.width - 50, canvas.height - 50); // Eje X
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(50, 50);
+      ctx.lineTo(50, canvas.height - 50); // Eje Y
+      ctx.stroke();
+      
+      // Etiquetas
+      ctx.fillStyle = '#333';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Tiempo (s)', canvas.width / 2, canvas.height - 10);
+      ctx.textAlign = 'right';
+      ctx.fillText('Distancia (m)', 20, 30);
+      
+      // Dibuja "stickman"
+      const x = 150;
+      const y = canvas.height - 100;
+      drawStickman(ctx, x, y);
+      
+      // Flecha indicando movimiento
+      ctx.strokeStyle = '#0066cc';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 80, y);
+      ctx.lineTo(x + 150, y);
+      ctx.stroke();
+      
+      // Punta de flecha
+      ctx.fillStyle = '#0066cc';
+      ctx.beginPath();
+      ctx.moveTo(x + 150, y);
+      ctx.lineTo(x + 140, y - 10);
+      ctx.lineTo(x + 140, y + 10);
+      ctx.fill();
+      
+      ctx.font = '12px sans-serif';
+      ctx.fillStyle = '#0066cc';
+      ctx.fillText('velocidad constante', x + 115, y + 30);
+    }
+    
+    function drawStickman(ctx, x, y) {
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = '#000';
+      
+      // Cabeza
+      ctx.beginPath();
+      ctx.arc(x, y - 20, 10, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Cuerpo
+      ctx.beginPath();
+      ctx.moveTo(x, y - 10);
+      ctx.lineTo(x, y + 20);
+      ctx.stroke();
+      
+      // Brazos
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y);
+      ctx.lineTo(x + 15, y);
+      ctx.stroke();
+      
+      // Piernas
+      ctx.beginPath();
+      ctx.moveTo(x, y + 20);
+      ctx.lineTo(x - 10, y + 35);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(x, y + 20);
+      ctx.lineTo(x + 10, y + 35);
+      ctx.stroke();
+    }
+    
+    // ============ PANTALLA 3: Estadísticas ============
+    function drawScreen3() {
+      const canvas = document.getElementById('canvas-screen3');
+      const ctx = canvas.getContext('2d');
+      
+      // Datos tipificados (de literatura previa)
+      const stats = {
+        'horizontal': 20,
+        'ascending': 55,
+        'descending': 25
+      };
+      
+      // Limpia
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Dibuja gráfico de barras simple
+      const x = 100;
+      const y = 200;
+      const barWidth = 120;
+      const spacing = 40;
+      
+      const labels = ['Horizontal', 'Ascendente', 'Descendente'];
+      const values = [stats.horizontal, stats.ascending, stats.descending];
+      const colors = ['#4CAF50', '#2196F3', '#FF9800'];
+      
+      values.forEach((val, i) => {
+        const barHeight = (val / 100) * 150;
+        
+        // Barra
+        ctx.fillStyle = colors[i];
+        ctx.fillRect(x + i * (barWidth + spacing), y - barHeight, barWidth, barHeight);
+        
+        // Etiqueta
+        ctx.fillStyle = '#333';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(labels[i], x + i * (barWidth + spacing) + barWidth / 2, y + 30);
+        ctx.fillText(`${val}%`, x + i * (barWidth + spacing) + barWidth / 2, y - barHeight - 10);
+      });
+    }
+    
+    // ============ PANTALLA 5: Simulación interactiva ============
+    function drawScreen5Initial() {
+      const canvas = document.getElementById('canvas-screen5');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.fillStyle = '#f5f5f5';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#666';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Presiona "Ejecutar simulación" para comenzar', canvas.width / 2, canvas.height / 2);
+    }
+    
+    document.getElementById('velocity-slider').addEventListener('input', (e) => {
+      document.getElementById('velocity-display').textContent = e.target.value;
+    });
+    
+    function runSimulation() {
+      const canvas = document.getElementById('canvas-screen5');
+      const ctx = canvas.getContext('2d');
+      const velocity = parseFloat(document.getElementById('velocity-slider').value);
+      
+      // Limpia
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Dibuja ejes
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(80, canvas.height - 80);
+      ctx.lineTo(canvas.width - 40, canvas.height - 80);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(80, 40);
+      ctx.lineTo(80, canvas.height - 80);
+      ctx.stroke();
+      
+      // Etiquetas
+      ctx.fillStyle = '#333';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Tiempo (s)', canvas.width / 2, canvas.height - 20);
+      ctx.textAlign = 'right';
+      ctx.fillText('Distancia (m)', 30, 30);
+      
+      // Dibuja gráfica
+      const timePoints = 10;
+      const maxDist = 10;
+      const xScale = (canvas.width - 120) / timePoints;
+      const yScale = (canvas.height - 140) / maxDist;
+      
+      ctx.strokeStyle = '#0066cc';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      
+      for (let t = 0; t <= timePoints; t++) {
+        const dist = velocity * t;
+        const x = 80 + t * xScale;
+        const y = canvas.height - 80 - dist * yScale;
+        
+        if (t === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      
+      // Dibuja puntos
+      ctx.fillStyle = '#0066cc';
+      for (let t = 0; t <= timePoints; t += 2) {
+        const dist = velocity * t;
+        const x = 80 + t * xScale;
+        const y = canvas.height - 80 - dist * yScale;
+        ctx.fillRect(x - 3, y - 3, 6, 6);
+      }
+    }
+    
+    function resetSimulation() {
+      drawScreen5Initial();
+    }
+    
+    // ============ PANTALLA 6: Recap ============
+    function updateScreen6() {
+      const predictionText = {
+        'horizontal': 'Línea horizontal',
+        'ascending': 'Línea ascendente',
+        'descending': 'Línea descendente'
+      };
+      
+      document.getElementById('recap-prediction').textContent = 
+        predictionText[studentData.prediction1] || 'Sin predicción';
+    }
+    
+    // ============ FINALIZACIÓN ============
+    function finishVLD() {
+      alert('¡Completaste la VLD!\n\nDatos capturados:\n' + JSON.stringify(studentData, null, 2));
+      console.log('Datos finales:', studentData);
+    }
+    
+    // Inicializa en pantalla 1
+    updateScreen();
+  </script>
+</body>
+</html>
